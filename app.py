@@ -26,7 +26,7 @@ if "stage" not in st.session_state:
 if "trial_count" not in st.session_state:
     st.session_state.trial_count = 0    
 if "start_time" not in st.session_state:
-    st.session_state.start_time = 0.0*
+    st.session_state.start_time = 0.0
 
 
     
