@@ -3,6 +3,19 @@
 import streamlit as st
 import time
 import random
+from supabase import create_client, Client
+
+# --- Supabase 연결 ---
+# Streamlit Cloud에서는 .streamlit/secrets.toml의 값을 사용합니다.
+try:
+    SUPABASE_URL = st.secrets["SUPABASE_URL"]
+    SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
+except Exception:
+    # 로컬 테스트 시 아래 두 값을 직접 입력할 수 있습니다.
+    SUPABASE_URL = "여기에_너의_Supabase_URL"
+    SUPABASE_KEY = "여기에_너의_Supabase_anon_key"
+
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # --- 1. 페이지 설정 및 제목 ---
 st.set_page_config(page_title="단계별 뇌 인지 실험", layout="centered")
@@ -13,7 +26,10 @@ if "stage" not in st.session_state:
 if "trial_count" not in st.session_state:
     st.session_state.trial_count = 0    
 if "start_time" not in st.session_state:
-    st.session_state.start_time = 0.0
+    st.session_state.start_time = 0.0*
+
+
+    
 if "current_arrow" not in st.session_state:
     st.session_state.current_arrow = "←"
 if "current_pos" not in st.session_state:
@@ -23,7 +39,11 @@ if "results" not in st.session_state:
 if "feedback" not in st.session_state:
     st.session_state.feedback = None    
 if "ready" not in st.session_state:
-    st.session_state.ready = False      
+    st.session_state.ready = False
+if "nickname" not in st.session_state:
+    st.session_state.nickname = ""
+if "db_saved" not in st.session_state:
+    st.session_state.db_saved = False
 
 # --- 3. 문제 출제 함수 ---
 def generate_question():
@@ -80,13 +100,20 @@ st.title("🧠 단계별 인지 간섭 시뮬레이터")
 # [상황 0] 최초 웰컴 화면
 if st.session_state.stage == "시작화면":
     st.info("👋 안녕하세요! 뇌 인지 간섭 실험 사이트에 오신 것을 환영합니다.")
+
+    nickname = st.text_input("닉네임을 입력하세요", max_chars=20)
     st.write("본 실험은 스마트폰 모바일 터치 환경에 최적화되어 있습니다.")
     st.write("정밀한 측정을 위해 **[스마트폰 진동 및 소리]**를 켜주시고 진지하게 임해 주세요!")
     st.markdown("<br>", unsafe_allow_html=True)
     
     if st.button("🚀 실험 홈 진입하기", use_container_width=True):
-        st.session_state.stage = "1단계안내" 
-        st.rerun()
+        if nickname.strip():
+            st.session_state.nickname = nickname.strip()
+            st.session_state.stage = "1단계안내"
+            st.session_state.db_saved = False
+            st.rerun()
+        else:
+            st.warning("닉네임을 입력해주세요.")
 
 # [상황 1] 1단계 전용 규칙 설명 화면
 elif st.session_state.stage == "1단계안내":
@@ -233,3 +260,8 @@ elif st.session_state.stage == "종료":
         st.session_state.stage = "시작화면"
         st.session_state.trial_count = 0
         st.session_state.start_time = 0.0
+        st.session_state.results = []
+        st.session_state.feedback = None
+        st.session_state.ready = False
+        st.session_state.nickname = ""
+        st.session_state.db_saved = False
