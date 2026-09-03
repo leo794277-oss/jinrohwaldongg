@@ -31,6 +31,19 @@ try:
 except Exception as e:
     st.error(f"Supabase 연결 테스트 실패: {e}")
 
+try:
+    test_insert = supabase.table("experiment_results").insert({
+        "nickname": "TEST",
+        "stage1_avg": 100.0,
+        "stage2_avg": 200.0
+    }).execute()
+
+    st.success("INSERT 테스트 성공!")
+    st.write(test_insert)
+
+except Exception as e:
+    st.error(f"INSERT 테스트 실패: {e}")
+
 
 # =========================================================
 # 1. 페이지 설정
