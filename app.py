@@ -24,6 +24,13 @@ supabase: Client = create_client(
     SUPABASE_KEY
 )
 
+try:
+    test = supabase.table("experiment_results").select("*").limit(1).execute()
+    st.write("Supabase 연결 성공")
+    st.write(test)
+except Exception as e:
+    st.error(f"Supabase 연결 테스트 실패: {e}")
+
 
 # =========================================================
 # 1. 페이지 설정
