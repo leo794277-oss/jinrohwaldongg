@@ -187,32 +187,7 @@ if st.session_state.stage == "시작화면":
         "👋 뇌 인지 간섭 실험 사이트에 오신 것을 환영합니다."
     )
 
-    nickname = st.markdown("""
-<style>
-/* 닉네임 입력창 */
-div[data-testid="stTextInput"] input {
-    background-color: white !important;
-    color: #222222 !important;
-    border: 2px solid #4A90E2 !important;
-    border-radius: 10px !important;
-    min-height: 50px !important;
-    font-size: 18px !important;
-}
-
-/* 입력창 라벨 */
-div[data-testid="stTextInput"] label {
-    color: #222222 !important;
-    font-size: 17px !important;
-    font-weight: 700 !important;
-}
-
-/* 입력창에 포커스가 갔을 때 */
-div[data-testid="stTextInput"] input:focus {
-    border-color: #1D65C1 !important;
-    box-shadow: 0 0 0 2px rgba(29, 101, 193, 0.2) !important;
-}
-</style>
-""", unsafe_allow_html=True)
+    
 
 nickname = st.text_input(
     "닉네임을 입력하세요",
