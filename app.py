@@ -221,9 +221,7 @@ if st.session_state.stage == "시작화면":
             st.rerun()
 
 
-            except Exception as e:
-                st.error(f"닉네임 확인 실패: {e}")
-
+        
     # -----------------------------
     # 랭킹 영역
     # -----------------------------
