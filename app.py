@@ -4,7 +4,6 @@ import time
 import random
 import firebase_admin
 from firebase_admin import credentials, firestore
-from google.api_core.exceptions import AlreadyExists
 
 
 # =========================================================
@@ -61,7 +60,6 @@ defaults = {
     "nickname": "",
     "db_saved": False,
     "ranking_view": False,
-    "nickname_reserved": False,
 }
 
 for key, value in defaults.items():
@@ -70,14 +68,7 @@ for key, value in defaults.items():
 
 
 # =========================================================
-# 2. 닉네임 중복 방지
-# =========================================================
-
-
-
-
-# =========================================================
-# 3. 문제 출제
+# 2. 문제 출제
 # =========================================================
 
 def generate_question():
@@ -95,7 +86,7 @@ def generate_question():
 
 
 # =========================================================
-# 4. 화면 효과
+# 3. 화면 효과 및 닉네임 입력창 스타일
 # =========================================================
 
 if st.session_state.feedback == "correct":
@@ -124,6 +115,36 @@ st.markdown(
         50% {{ transform: scale(1.3); }}
         100% {{ transform: scale(1); }}
     }}
+
+    /* 닉네임 입력창 */
+    div[data-testid="stTextInput"] input {{
+        background-color: #ffffff !important;
+        color: #222222 !important;
+        border: 2px solid #4A90E2 !important;
+        border-radius: 10px !important;
+        min-height: 52px !important;
+        font-size: 18px !important;
+        padding: 10px 14px !important;
+    }}
+
+    /* 입력창 라벨 */
+    div[data-testid="stTextInput"] label {{
+        color: #222222 !important;
+        font-size: 17px !important;
+        font-weight: 700 !important;
+    }}
+
+    /* 입력창 안내 문구 */
+    div[data-testid="stTextInput"] input::placeholder {{
+        color: #777777 !important;
+        opacity: 1 !important;
+    }}
+
+    /* 입력창 선택 시 */
+    div[data-testid="stTextInput"] input:focus {{
+        border-color: #1D65C1 !important;
+        box-shadow: 0 0 0 2px rgba(29, 101, 193, 0.2) !important;
+    }}
     </style>
     """,
     unsafe_allow_html=True
@@ -131,7 +152,7 @@ st.markdown(
 
 
 # =========================================================
-# 5. 카운트다운
+# 4. 카운트다운
 # =========================================================
 
 def run_countdown():
@@ -166,7 +187,7 @@ def run_countdown():
 
 
 # =========================================================
-# 6. 제목 및 사이드바
+# 5. 제목 및 사이드바
 # =========================================================
 
 st.title("🧠 단계별 인지 간섭 시뮬레이터")
@@ -178,7 +199,7 @@ else:
 
 
 # =========================================================
-# 7. 시작 화면 + 랭킹
+# 6. 시작 화면 + 랭킹
 # =========================================================
 
 if st.session_state.stage == "시작화면":
@@ -187,13 +208,13 @@ if st.session_state.stage == "시작화면":
         "👋 뇌 인지 간섭 실험 사이트에 오신 것을 환영합니다."
     )
 
-    
-
-nickname = st.text_input(
-    "닉네임을 입력하세요",
-    placeholder="여기에 닉네임을 입력하세요",
-    max_chars=20
-)
+    # 닉네임 입력창
+    nickname = st.text_input(
+        "닉네임을 입력하세요",
+        placeholder="여기에 닉네임을 입력하세요",
+        max_chars=20,
+        key="nickname_input"
+    )
 
     st.write(
         "본 실험은 스마트폰 모바일 터치 환경에 최적화되어 있습니다."
@@ -203,7 +224,6 @@ nickname = st.text_input(
         "정밀한 측정을 위해 스마트폰 진동 및 소리를 켜주세요."
     )
 
-   
     if st.button(
         "🚀 실험 홈 진입하기",
         use_container_width=True
@@ -223,8 +243,6 @@ nickname = st.text_input(
             st.session_state.ready = False
             st.rerun()
 
-
-        
     # -----------------------------
     # 랭킹 영역
     # -----------------------------
@@ -281,7 +299,7 @@ nickname = st.text_input(
                         )
                     })
 
-                # 정답률 높은 순 → 오답 적은 순 → 반응시간 빠른 순
+                # 정답률 높은 순 → 오답 적은 순 → 2단계 반응시간 빠른 순
                 ranking_data.sort(
                     key=lambda x: (
                         -x["정답률(%)"],
@@ -346,7 +364,7 @@ nickname = st.text_input(
 
 
 # =========================================================
-# 8. 1단계 안내
+# 7. 1단계 안내
 # =========================================================
 
 elif st.session_state.stage == "1단계안내":
@@ -355,9 +373,7 @@ elif st.session_state.stage == "1단계안내":
 
     st.markdown("### 📢 1단계 규칙")
 
-    st.write(
-        "화살표가 화면 정가운데에 나타납니다."
-    )
+    st.write("화살표가 화면 정가운데에 나타납니다.")
 
     st.info(
         "← 이면 LEFT, → 이면 RIGHT 버튼을 누르세요."
@@ -385,7 +401,7 @@ elif st.session_state.stage == "1단계안내":
 
 
 # =========================================================
-# 9. 1단계 → 2단계 전환
+# 8. 1단계 → 2단계 전환
 # =========================================================
 
 elif st.session_state.stage == "전환기":
@@ -420,7 +436,7 @@ elif st.session_state.stage == "전환기":
 
 
 # =========================================================
-# 10. 실험 진행
+# 9. 실험 진행
 # =========================================================
 
 elif st.session_state.stage in [1, 2]:
@@ -494,11 +510,17 @@ elif st.session_state.stage in [1, 2]:
     user_choice = None
 
     with btn_col1:
-        if st.button("👈 LEFT (왼쪽)", use_container_width=True):
+        if st.button(
+            "👈 LEFT (왼쪽)",
+            use_container_width=True
+        ):
             user_choice = "←"
 
     with btn_col2:
-        if st.button("👉 RIGHT (오른쪽)", use_container_width=True):
+        if st.button(
+            "👉 RIGHT (오른쪽)",
+            use_container_width=True
+        ):
             user_choice = "→"
 
     if user_choice is not None:
@@ -515,7 +537,7 @@ elif st.session_state.stage in [1, 2]:
                 st.session_state.current_arrow == user_choice
             )
 
-            # 모든 응답을 저장해 정답률과 오답 횟수 계산
+            # 모든 응답을 저장하여 정답률과 오답 횟수 계산
             st.session_state.results.append({
                 "단계": f"{st.session_state.stage}단계",
                 "반응시간(ms)": round(reaction_time, 2),
@@ -559,7 +581,7 @@ elif st.session_state.stage in [1, 2]:
 
 
 # =========================================================
-# 11. 실험 종료 및 결과 저장
+# 10. 실험 종료 및 결과 저장
 # =========================================================
 
 elif st.session_state.stage == "종료":
@@ -676,7 +698,6 @@ elif st.session_state.stage == "종료":
         "🔄 처음부터 다시 도전하기",
         use_container_width=True
     ):
-
         st.session_state.stage = "시작화면"
         st.session_state.trial_count = 0
         st.session_state.start_time = 0.0
@@ -688,6 +709,8 @@ elif st.session_state.stage == "종료":
         st.session_state.nickname = ""
         st.session_state.db_saved = False
         st.session_state.ranking_view = False
-        st.session_state.nickname_reserved = False
+
+        # 닉네임 입력창도 초기화
+        st.session_state.nickname_input = ""
 
         st.rerun()
