@@ -43,7 +43,18 @@ try:
 
 except Exception as e:
     st.error(f"INSERT 테스트 실패: {e}")
+st.write("실제 연결 URL:", SUPABASE_URL)
 
+if SUPABASE_KEY.startswith("eyJ"):
+    import base64
+    import json
+
+    payload = SUPABASE_KEY.split(".")[1]
+    payload += "=" * (-len(payload) % 4)
+    info = json.loads(base64.urlsafe_b64decode(payload))
+
+    st.write("실제 키의 프로젝트 ID:", info.get("ref"))
+    st.write("실제 키의 역할:", info.get("role"))
 
 # =========================================================
 # 1. 페이지 설정
