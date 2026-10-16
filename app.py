@@ -4,78 +4,37 @@
 import streamlit as st
 import time
 import random
-from supabase import create_client, Client
+import firebase_admin
+from firebase_admin import credentials, firestore
 
 
 # =========================================================
-# 0. Supabase 연결
-# =========================================================
-
-try:
-    SUPABASE_URL = st.secrets["SUPABASE_URL"]
-    SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
-except Exception:
-    # 로컬에서 테스트할 경우 여기에 직접 입력
-    SUPABASE_URL = "여기에_너의_Supabase_URL"
-    SUPABASE_KEY = "여기에_너의_Supabase_anon_key"
-
-supabase: Client = create_client(
-    SUPABASE_URL,
-    SUPABASE_KEY
-)
-
-try:
-    test = supabase.table("experiment_results").select("*").limit(1).execute()
-    st.write("Supabase 연결 성공")
-    st.write(test)
-except Exception as e:
-    st.error(f"Supabase 연결 테스트 실패: {e}")
-
-try:
-    test_insert = supabase.table("experiment_results").insert({
-        "nickname": "TEST",
-        "stage1_avg": 100.0,
-        "stage2_avg": 200.0
-    }).execute()
-
-    st.success("INSERT 테스트 성공!")
-    st.write(test_insert)
-
-except Exception as e:
-    st.error(f"INSERT 테스트 실패: {e}")
-st.write("실제 연결 URL:", SUPABASE_URL)
-
-if SUPABASE_KEY.startswith("eyJ"):
-    import base64
-    import json
-
-    payload = SUPABASE_KEY.split(".")[1]
-    payload += "=" * (-len(payload) % 4)
-    info = json.loads(base64.urlsafe_b64decode(payload))
-
-    st.write("실제 키의 프로젝트 ID:", info.get("ref"))
-    st.write("실제 키의 역할:", info.get("role"))
-try:
-    result = supabase.table("experiment_results").insert({
-        "nickname": "TEST",
-        "stage1_avg": 100.0,
-        "stage2_avg": 200.0
-    }).execute()
-
-    st.success("INSERT 성공")
-    st.write(result.data)
-
-except Exception as e:
-    st.error(f"오류 유형: {type(e).__name__}")
-    st.exception(e)
-# =========================================================
-# 1. 페이지 설정
+# 0. 페이지 설정 및 Firebase 연결
 # =========================================================
 
 st.set_page_config(
     page_title="단계별 뇌 인지 실험",
     layout="centered"
 )
+
+@st.cache_resource
+def get_firestore_client():
+    """Streamlit secrets에 저장한 Firebase 서비스 계정으로 Firestore 연결."""
+    if not firebase_admin._apps:
+        service_account_info = dict(st.secrets["firebase_service_account"])
+        # TOML에서 "\n"으로 저장한 개인 키를 실제 줄바꿈으로 변환
+        if "private_key" in service_account_info:
+            service_account_info["private_key"] = service_account_info["private_key"].replace("\\n", "\n")
+        cred = credentials.Certificate(service_account_info)
+        firebase_admin.initialize_app(cred)
+    return firestore.client()
+
+try:
+    db = get_firestore_client()
+    st.sidebar.success("Firebase 연결 성공")
+except Exception as e:
+    db = None
+    st.sidebar.error(f"Firebase 연결 실패: {e}")
 
 
 # =========================================================
@@ -818,37 +777,27 @@ elif st.session_state.stage == "종료":
 
 
     # =====================================================
-    # Supabase 저장
+    # Firebase Firestore 저장
     # =====================================================
 
     if not st.session_state.db_saved:
-
-        try:
-
-            supabase.table(
-                "experiment_results"
-            ).insert(
-                {
+        if db is None:
+            st.error("❌ Firebase에 연결되지 않아 결과를 저장하지 못했습니다.")
+        else:
+            try:
+                db.collection("experiment_results").add({
                     "nickname": st.session_state.nickname,
                     "stage1_avg": avg_stage1,
-                    "stage2_avg": avg_stage2
-                }
-            ).execute()
+                    "stage2_avg": avg_stage2,
+                    "delay": delay,
+                    "created_at": firestore.SERVER_TIMESTAMP
+                })
 
+                st.session_state.db_saved = True
+                st.success("✅ 실험 결과가 Firebase Firestore에 저장되었습니다!")
 
-            # 저장 성공
-            st.session_state.db_saved = True
-
-            st.success(
-                "✅ 실험 결과가 Supabase DB에 저장되었습니다!"
-            )
-
-
-        except Exception as e:
-
-            st.error(
-                f"❌ Supabase DB 저장 실패: {e}"
-            )
+            except Exception as e:
+                st.error(f"❌ Firebase DB 저장 실패: {e}")
 
 
     # -----------------------------------------------------
