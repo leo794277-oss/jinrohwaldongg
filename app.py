@@ -2,7 +2,6 @@
 import streamlit as st
 import time
 import random
-import hashlib
 import firebase_admin
 from firebase_admin import credentials, firestore
 from google.api_core.exceptions import AlreadyExists
@@ -74,50 +73,7 @@ for key, value in defaults.items():
 # 2. 닉네임 중복 방지
 # =========================================================
 
-def get_nickname_id(nickname):
-    """대소문자 차이를 무시하는 닉네임 고유 ID."""
-    normalized = nickname.strip().casefold()
 
-    return hashlib.sha256(
-        normalized.encode("utf-8")
-    ).hexdigest()
-
-
-def reserve_nickname(nickname):
-    """
-    Firestore 문서 생성으로 닉네임을 원자적으로 선점한다.
-    이미 사용 중이면 False를 반환한다.
-    """
-    normalized = nickname.strip().casefold()
-
-    # 기능 추가 이전에 저장된 실험 기록도 확인
-    old_records = db.collection(
-        "experiment_results"
-    ).stream()
-
-    for doc in old_records:
-        data = doc.to_dict() or {}
-        old_nickname = str(data.get("nickname", "")).strip()
-
-        if old_nickname.casefold() == normalized:
-            return False
-
-    # 닉네임을 별도 컬렉션에 등록
-    nickname_ref = db.collection(
-        "nicknames"
-    ).document(get_nickname_id(nickname))
-
-    try:
-        nickname_ref.create({
-            "nickname": nickname.strip(),
-            "normalized_nickname": normalized,
-            "created_at": firestore.SERVER_TIMESTAMP
-        })
-
-        return True
-
-    except AlreadyExists:
-        return False
 
 
 # =========================================================
@@ -244,6 +200,7 @@ if st.session_state.stage == "시작화면":
         "정밀한 측정을 위해 스마트폰 진동 및 소리를 켜주세요."
     )
 
+   
     if st.button(
         "🚀 실험 홈 진입하기",
         use_container_width=True
@@ -253,32 +210,16 @@ if st.session_state.stage == "시작화면":
         if not clean_nickname:
             st.warning("닉네임을 입력해주세요.")
 
-        elif db is None:
-            st.error(
-                "Firebase에 연결할 수 없습니다. "
-                "설정을 확인한 뒤 다시 시도해주세요."
-            )
-
         else:
-            try:
-                reserved = reserve_nickname(clean_nickname)
+            st.session_state.nickname = clean_nickname
+            st.session_state.stage = "1단계안내"
+            st.session_state.db_saved = False
+            st.session_state.results = []
+            st.session_state.trial_count = 0
+            st.session_state.feedback = None
+            st.session_state.ready = False
+            st.rerun()
 
-                if not reserved:
-                    st.error(
-                        "이미 사용 중인 닉네임입니다. "
-                        "다른 닉네임을 입력해주세요."
-                    )
-
-                else:
-                    st.session_state.nickname = clean_nickname
-                    st.session_state.nickname_reserved = True
-                    st.session_state.stage = "1단계안내"
-                    st.session_state.db_saved = False
-                    st.session_state.results = []
-                    st.session_state.trial_count = 0
-                    st.session_state.feedback = None
-                    st.session_state.ready = False
-                    st.rerun()
 
             except Exception as e:
                 st.error(f"닉네임 확인 실패: {e}")
