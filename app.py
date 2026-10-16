@@ -55,7 +55,19 @@ if SUPABASE_KEY.startswith("eyJ"):
 
     st.write("실제 키의 프로젝트 ID:", info.get("ref"))
     st.write("실제 키의 역할:", info.get("role"))
+try:
+    result = supabase.table("experiment_results").insert({
+        "nickname": "TEST",
+        "stage1_avg": 100.0,
+        "stage2_avg": 200.0
+    }).execute()
 
+    st.success("INSERT 성공")
+    st.write(result.data)
+
+except Exception as e:
+    st.error(f"오류 유형: {type(e).__name__}")
+    st.exception(e)
 # =========================================================
 # 1. 페이지 설정
 # =========================================================
