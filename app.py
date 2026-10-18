@@ -145,14 +145,14 @@ st.markdown(
         box-shadow: 0 0 0 2px rgba(29, 101, 193, 0.2) !important;
     }}
     /* 모바일에서도 선택지 두 개를 가로로 유지 */
-div[data-testid="stHorizontalBlock"] {
+    div[data-testid="stHorizontalBlock"] {
     flex-wrap: nowrap !important;
-}
+    }
 
-div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {
+    div[data-testid="stHorizontalBlock"] > div[data-testid="stColumn"] {
     min-width: 0 !important;
     flex: 1 1 0% !important;
-}
+    }
     </style>
     """,
     unsafe_allow_html=True
