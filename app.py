@@ -690,45 +690,80 @@ elif st.session_state.stage == "종료":
     # -----------------------------
     # 결과 표시
     # -----------------------------
+    # -----------------------------
+    # 결과 표시 (모바일 짤림 방지 커스텀 UI)
+    # -----------------------------
 
     st.markdown("## 📊 인지 속도 결과 분석")
 
-    col1, col2, col3 = st.columns(3)
+    # 모바일 해상도에서도 수치가 구겨지거나 잘리지 않도록 정밀 제어하는 CSS 심기
+    st.markdown(
+        """
+        <style>
+        div[data-testid="stMetricValue"] {
+            font-size: 22px !important; /* 글자 크기를 살짝 줄여 공간 확보 */
+            font-weight: 700 !important;
+        }
+        div[data-testid="stMetricLabel"] {
+            font-size: 13px !important;
+            white-space: nowrap !important; /* 문구가 밑으로 튕겨 나가는 현상 방지 */
+        }
+        .result-card-container {
+            display: flex;
+            flex-wrap: wrap; /* 모바일에서 화면이 좁아지면 카드가 자동으로 아래층으로 배치됨 */
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .result-card {
+            flex: 1 1 28%;
+            min-width: 100px;
+            background-color: #ffffff;
+            padding: 12px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border-left: 5px solid #4A90E2;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
 
-    with col1:
-        st.metric(
-            "🟢 1단계 (기준선)",
-            f"{avg_stage1} ms"
-        )
-
-    with col2:
-        st.metric(
-            "🔵 2단계 일치 조건",
-            f"{avg_stage2_congruent} ms"
-        )
-
-    with col3:
-        st.metric(
-            "🔴 2단계 불일치 조건",
-            f"{avg_stage2_incongruent} ms"
-        )
+    # 반응형 사각형 카드 레이아웃으로 주요 3대 속도 지표 배치
+    st.markdown(
+        f"""
+        <div class="result-card-container">
+            <div class="result-card" style="border-left-color: #28a745;">
+                <div style="font-size: 13px; color: #666;">🟢 1단계 (기준선)</div>
+                <div style="font-size: 24px; font-weight: bold; color: #222; margin-top: 5px;">{avg_stage1} <span style="font-size: 14px; font-weight: normal;">ms</span></div>
+            </div>
+            <div class="result-card" style="border-left-color: #007bff;">
+                <div style="font-size: 13px; color: #666;">🔵 2단계 일치 조건</div>
+                <div style="font-size: 24px; font-weight: bold; color: #222; margin-top: 5px;">{avg_stage2_congruent} <span style="font-size: 14px; font-weight: normal;">ms</span></div>
+            </div>
+            <div class="result-card" style="border-left-color: #ff4b4b;">
+                <div style="font-size: 13px; color: #666;">🔴 2단계 불일치 조건</div>
+                <div style="font-size: 24px; font-weight: bold; color: #222; margin-top: 5px;">{avg_stage2_incongruent} <span style="font-size: 14px; font-weight: normal;">ms</span></div>
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
     st.markdown("---")
 
-    m_col1, m_col2, m_col3 = st.columns(3)
-
-    with m_col1:
+    # 하단 부가 데이터 보드도 간격 확보하여 분할 배치
+    col_m1, col_m2, col_m3 = st.columns(3)
+    with col_m1:
         st.metric("🎯 정답률", f"{accuracy}%")
-
-    with m_col2:
+    with col_m2:
         st.metric("❌ 오답 횟수", f"{wrong_count}회")
-
-    with m_col3:
-        st.metric("⏳ 순수 인지 간섭 시간", f"{simon_delay} ms")
+    with col_m3:
+        st.metric("⏳ 순수 간섭 시간", f"{simon_delay} ms")
 
     st.info(
         f"💡 **분석 결과 :** 동일한 2단계 실험 내에서도 화살표 위치와 방향이 일치할 때보다, "
         f"불일치할 때 뇌가 혼란을 느껴 평균 **{simon_delay} ms** 만큼 반응이 지연되었습니다. "
+        f"이것이 바로 《무의식은 어떻게 나를 설계하는가》에서 말하는 무의식적 시각 위치 정보가 의식적 판단을 방해한 '사이먼 효과'의 증거입니다."
     )
 
     st.caption(
@@ -751,5 +786,6 @@ elif st.session_state.stage == "종료":
         st.session_state.nickname = ""
         st.session_state.db_saved = False
         st.session_state.ranking_view = False
+        st.session_state.nickname_input = ""
+        st.rerun()
 
-        # 닉네임 입력창도 초기화
