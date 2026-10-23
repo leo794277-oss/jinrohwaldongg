@@ -434,7 +434,7 @@ elif st.session_state.stage == "전환기":
 # 9. 실험 진행
 # =========================================================
 
-elif st.session_state.stage in:
+elif st.session_state.stage in[1,2]:
 
     if (
         st.session_state.feedback is None
