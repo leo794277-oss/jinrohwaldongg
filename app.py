@@ -95,7 +95,7 @@ st.markdown(
 # =========================================================
 def run_countdown():
     placeholder = st.empty()
-    for i in:[3, 2, 1]
+    for i in[3, 2, 1]: 
         placeholder.markdown(f'<h1 style="text-align:center;font-size:100px;color:#ff4b4b;">{i}</h1>', unsafe_allow_html=True)
         time.sleep(1)
     placeholder.markdown('<h1 style="text-align:center;font-size:100px;color:#28a745;">START!</h1>', unsafe_allow_html=True)
@@ -224,7 +224,7 @@ elif st.session_state.stage == "전환기":
 # =========================================================
 # 9. 실험 진행 (완벽 수정 완료)
 # =========================================================
-elif st.session_state.stage in:[1, 2]
+elif st.session_state.stage in[1, 2]:
     if st.session_state.feedback is None and st.session_state.start_time == 0.0 and st.session_state.ready:
         st.session_state.start_time = time.time()
 
