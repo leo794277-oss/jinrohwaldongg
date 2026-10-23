@@ -169,7 +169,7 @@ st.markdown(
 def run_countdown():
     placeholder = st.empty()
 
-    for i in:
+    for i in[3,2,1]:
         placeholder.markdown(
             f"""
             <h1 style="
