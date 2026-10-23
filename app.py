@@ -253,6 +253,8 @@ if st.session_state.stage == "시작화면":
             st.session_state.ready = False
             st.rerun()
 
+
+   
     # -----------------------------
     # 랭킹 영역
     # -----------------------------
@@ -286,36 +288,24 @@ if st.session_state.stage == "시작화면":
                         "nickname" not in data
                         or "stage1_avg" not in data
                         or "stage2_avg" not in data
-                        or "delay" not in data
                     ):
                         continue
 
+                    stage1_avg = float(data["stage1_avg"])
+                    stage2_avg = float(data["stage2_avg"])
+
                     ranking_data.append({
                         "닉네임": data["nickname"],
-                        "정답률(%)": float(
-                            data.get("accuracy", 0)
-                        ),
-                        "오답 횟수": int(
-                            data.get("wrong_count", 0)
-                        ),
-                        "2단계 평균(ms)": float(
-                            data["stage2_avg"]
-                        ),
-                        "1단계 평균(ms)": float(
-                            data["stage1_avg"]
-                        ),
-                        "지연시간(ms)": float(
-                            data["delay"]
+                        "1단계 평균(ms)": stage1_avg,
+                        "2단계 평균(ms)": stage2_avg,
+                        "평균 반응시간 합(ms)": round(
+                            stage1_avg + stage2_avg, 2
                         )
                     })
 
-                # 정답률 높은 순 → 오답 적은 순 → 2단계 반응시간 빠른 순
+                # 두 단계 평균 반응시간 합이 작은 순
                 ranking_data.sort(
-                    key=lambda x: (
-                        -x["정답률(%)"],
-                        x["오답 횟수"],
-                        x["2단계 평균(ms)"]
-                    )
+                    key=lambda x: x["평균 반응시간 합(ms)"]
                 )
 
                 if ranking_data:
@@ -327,11 +317,9 @@ if st.session_state.stage == "시작화면":
                     columns = [
                         "순위",
                         "닉네임",
-                        "정답률(%)",
-                        "오답 횟수",
-                        "2단계 평균(ms)",
                         "1단계 평균(ms)",
-                        "지연시간(ms)"
+                        "2단계 평균(ms)",
+                        "평균 반응시간 합(ms)"
                     ]
 
                     st.dataframe(
@@ -344,9 +332,8 @@ if st.session_state.stage == "시작화면":
                     )
 
                     st.caption(
-                        "순위 기준: 정답률 높은 순 → "
-                        "오답 횟수 적은 순 → "
-                        "2단계 평균 반응시간 빠른 순"
+                        "순위 기준: 1단계와 2단계 평균 반응시간의 합이 "
+                        "작은 순"
                     )
 
                 else:
@@ -371,7 +358,6 @@ if st.session_state.stage == "시작화면":
 
             except Exception as e:
                 st.error(f"랭킹 조회 실패: {e}")
-
 
 # =========================================================
 # 7. 1단계 안내
